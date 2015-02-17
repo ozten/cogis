@@ -5,6 +5,10 @@ var http = require('http');
 var DEBUG = true;
 var url = 'http://cogcc.state.co.us/cogis/SpillReport.asp?doc_num=200392836';
 
+var records = {
+
+};
+
 function afterWeGetTheDataFn(res) {
 
     console.log(res.statusCode);
@@ -17,19 +21,53 @@ function afterWeGetTheDataFn(res) {
 }
 
 function processData(body) {
-    var waterSpilled = parseByKey('Water spilled:');
+	body = body.toString();
+	// GW Impact?</strong>&nbsp;N</FONT>
+	var groundWater = parseByKey('GW Impact?', '</FONT>', body);
 
+	// Water spilled:</font></strong>
+	// &nbsp;<font face=Arial size=1>&nbsp;30</font></td>
+    var waterSpilled = parseByKey('Water spilled:', '</td>', body);    
 }
 
-function haveTr(body, index) {
-    return findTr(body, index) !== -1;
-}
+function parseByKey(key, endTag, body) {
+	var keyIndex = 0;
 
-function findTr(body, index) {
+	
 	if (! body || ! body.indexOf) {
-		return -1;
+		return null;
 	}
-    return body.indexOf('<tr>', index);
+
+	while (haveKey(key, keyIndex, body)) {		
+	    var keyIndex = findKey(key, keyIndex, body);
+
+	    var endPos = body.indexOf(endTag, keyIndex + 1);
+	    if (keyIndex == -1 || endPos == -1) {
+	    	continue;
+	    }
+
+	    var rawValue = body.substring(keyIndex + key.length, endPos);	    
+	    rawValue = rawValue.replace(/&nbsp;/g, ' ');
+	    
+	    records[key] = textValue(rawValue);
+
+	    console.log(rawValue);
+
+	    keyIndex += 1;
+	}
+}
+
+function haveKey(key, keyIndex, body) {	
+	return body.indexOf(key, keyIndex) !== -1;
+}
+
+function findKey(key, keyIndex, body) {
+	return body.indexOf(key, keyIndex);
+}
+
+function textValue(html) {
+	// TODO get text values of invalid HTML
+	return html;
 }
 
 if (DEBUG) {
@@ -38,8 +76,7 @@ if (DEBUG) {
 	if (process.argv.length > 2) {
 		filepath = process.argv[2];
 	}
-	fs.readFile(filepath, {encoding: 'utf8'}, function(err, data) {
-		console.log(data, 'err=', err, process.argv);
+	fs.readFile(filepath, {encoding: 'utf8'}, function(err, data) {		
 		if (err) {
 			console.error(err);
 		} else {
