@@ -1,22 +1,41 @@
 var fs = require('fs');
 var http = require('http');
 
+var utils = require('./utils');
 
-var DEBUG = true;
+
+var DEBUG = false;
 var url = 'http://cogcc.state.co.us/cogis/SpillReport.asp?doc_num=200392836';
+url = 'http://cogcc.state.co.us/cogis/SpillReport.asp?doc_num=2146233';
+
+var searchUrl = 'http://cogcc.state.co.us/cogis/IncidentSearch2.asp';
+var searchBody = 'itype=spill&ApiCountyCode=&ApiSequenceCode=&Complainant=&Operator=XTO&' +
+	'operator_name_number=name&Facility_Lease=&facility_name_number=name&qtrqtr=&sec=&' +
+	'twp=&rng=&project_num=&document_num=&maxrec=25&Button1=Submit';
 
 var records = {
 
 };
+// Search
 
-function afterWeGetTheDataFn(res) {
+// Each record
 
-    console.log(res.statusCode);
+function afterWeGetTheDataFn(res) {    
+	var chunks = "";
+	console.log(res.statusCode);
     if (res.statusCode >= 200 && res.statusCode < 300) {
     	res.on('err', function(err) {
     		console.error(err);
     	});
-        res.on('data', processData);
+        res.on('data', function(chunk) {
+
+        	chunks += chunk;
+        });
+        res.on('end', function() {
+        	console.log(chunks);        	
+        	writeData(url, chunks);
+        	processData(chunks);
+        });
     }    
 }
 
@@ -27,7 +46,9 @@ function processData(body) {
 
 	// Water spilled:</font></strong>
 	// &nbsp;<font face=Arial size=1>&nbsp;30</font></td>
-    var waterSpilled = parseByKey('Water spilled:', '</td>', body);    
+    var waterSpilled = parseByKey('Water spilled:', '</td>', body);
+
+    console.log(records);    
 }
 
 function parseByKey(key, endTag, body) {
@@ -46,12 +67,9 @@ function parseByKey(key, endTag, body) {
 	    	continue;
 	    }
 
-	    var rawValue = body.substring(keyIndex + key.length, endPos);	    
-	    rawValue = rawValue.replace(/&nbsp;/g, ' ');
+	    var rawValue = body.substring(keyIndex + key.length, endPos);	    	    
 	    
-	    records[key] = textValue(rawValue);
-
-	    console.log(rawValue);
+	    records[key] = textValue(rawValue);	    
 
 	    keyIndex += 1;
 	}
@@ -67,11 +85,23 @@ function findKey(key, keyIndex, body) {
 
 function textValue(html) {
 	// TODO get text values of invalid HTML
-	return html;
+	var text = html.replace(/&nbsp;/g, ' ')
+	               .replace(/<\/?[^>]*>/g, '')
+	               .replace(/\t/g, ' ')
+	               .replace(/\n/g, ' ')
+	               .replace(/  /g, ' ')
+	               .trim();	               
+	return text;
+}
+
+function writeData(url, data) {
+	var filepath = utils.urlToFilename(url);
+	fs.writeFile(filepath, data, {encoding: 'utf8'}, function(err) {
+		console.log('error:', err);
+	});
 }
 
 if (DEBUG) {
-
 	var filepath = '200392836.html';
 	if (process.argv.length > 2) {
 		filepath = process.argv[2];
@@ -83,6 +113,14 @@ if (DEBUG) {
 			processData(data);
 		}
 	});
-} else {
-	http.get(url, afterWeGetTheDataFn);
+} else {	
+	var filepath = utils.urlToFilename(url);
+	if (fs.existsSync(filepath)) {
+		console.log('Cache hit!');
+	} else {
+		console.log('Cache miss');
+		http.get(url, afterWeGetTheDataFn);
+	}
+	console.log('Retreiving', url);
+	//
 }
