@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 var search = require('./cogis_search');
 var lookup = require('./cogis_lookup');
 
