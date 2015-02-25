@@ -3,6 +3,8 @@ var http = require('http');
 
 var utils = require('./utils');
 
+'use strict';
+
 var urlPrefix = 'http://cogcc.state.co.us/cogis/SpillReport.asp?doc_num=';
 var sampleUrl = urlPrefix + '200392836';
 

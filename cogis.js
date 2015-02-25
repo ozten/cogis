@@ -1,11 +1,38 @@
 var search = require('./cogis_search');
 var lookup = require('./cogis_lookup');
 
-var spillOperator = 'XTO';
+'use strict';
+
+// defaults
 var resultsPerPage = 25;
+var spillOperator = 'XTO';
+
+function usage() {
+    process.stdout.write('cogis.js [resultsPerPage] [spillOperator]\n\n' +
+        '\tresultsPerPage - defaults to ' + resultsPerPage + '\n' +
+        '\tspillOperator - defaults to ' + spillOperator);
+}
+
+if (process.argv.length > 2) {
+  try {
+    resultsPerPage = parseInt(process.argv[2], 10);
+    if (isNaN(resultsPerPage)) {
+        usage();
+        process.exit(1);
+    }
+  } catch (e) {
+    usage();
+    console.error('ERROR:', e);
+    process.exit(1);
+  }
+}
+
+if (process.argv.length > 3) {
+    spillOperator = process.argv[3];
+}
 
 search(spillOperator, resultsPerPage, function(err, ids) {
-	ids.forEach(function(id) {		
-		lookup(id);
-	});
+    ids.forEach(function(id) {
+        lookup(id);
+    });
 });

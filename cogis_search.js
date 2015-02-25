@@ -4,8 +4,7 @@ var urlParse = require('url').parse;
 
 var utils = require('./utils');
 
-var urlPrefix = 'http://cogcc.state.co.us/cogis/SpillReport.asp?doc_num=';
-var sampleUrl = urlPrefix + '200392836';
+'use strict';
 
 /* curl 'http://cogcc.state.co.us/cogis/IncidentSearch2.asp'
 -H 'Host: cogcc.state.co.us'
