@@ -26,8 +26,14 @@ if (process.argv.length > 3) {
     spillOperator = process.argv[3];
 }
 
-search(spillOperator, resultsPerPage, function(err, ids) {
-    ids.forEach(function(id) {
-        lookup(id);
+if (resultsPerPage === 1) {
+    // Offline development mode for hacking on a search result
+    lookup('200392836');
+} else {
+    search(spillOperator, resultsPerPage, function(err, ids) {
+        ids.forEach(function(id) {
+            lookup(id);
+        });
     });
-});
+
+}

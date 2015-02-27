@@ -24,7 +24,7 @@ var records = {
 
 module.exports = function search(spillOperator, resultsPerPage, cb) {
 	var searchUrl = 'http://cogcc.state.co.us/cogis/IncidentSearch2.asp';
-	var searchBody = 'itype=spill&ApiCountyCode=&ApiSequenceCode=&Complainant=&Operator=' + 
+	var searchBody = 'itype=spill&ApiCountyCode=&ApiSequenceCode=&Complainant=&Operator=' +
 		spillOperator + '&' +
 		'operator_name_number=name&Facility_Lease=&facility_name_number=name&qtrqtr=&sec=&' +
 		'twp=&rng=&project_num=&document_num=&maxrec=' + resultsPerPage + '&Button1=Submit';
@@ -43,19 +43,19 @@ module.exports = function search(spillOperator, resultsPerPage, cb) {
 	searchOpts.port = 80;
 	var req = http.request(searchOpts, function(res) {
 		var chunks = "";
-		console.log('Search Results code:', res.statusCode);
+		//console.log('Search Results code:', res.statusCode);
 		res.setEncoding('utf8');
 		res.on('data', function(chunk) {
 			chunks += chunk;
 		});
-		res.on('end', function() {		
+		res.on('end', function() {
 			var ids = [];
 			fs.writeFile('search_results.html', chunks, {encoding: 'utf8'}, function(err) {
 				if (err) {
-					console.log('search results writing error:', err);				
+					console.log('search results writing error:', err);
 				}
 				gatherLinks(chunks, ids);
-				
+
 				cb(null, ids);
 			});
 		})
